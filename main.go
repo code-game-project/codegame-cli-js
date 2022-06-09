@@ -22,6 +22,9 @@ func main() {
 	var libraryVersion string
 	pflag.StringVar(&libraryVersion, "library-version", "latest", "The version of the JavaScript library to use, e.g. 0.8")
 
+	var typescript bool
+	pflag.BoolVar(&typescript, "typescript", false, "Whether to use TypeScript or JavaScript.")
+
 	pflag.Usage = func() {
 		fmt.Fprintf(os.Stderr, "Usage: %s <command> [...]\n", os.Args[0])
 		fmt.Fprintln(os.Stderr, "\nCommands:")
