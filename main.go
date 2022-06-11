@@ -49,7 +49,7 @@ func main() {
 
 	switch command {
 	case "new":
-		err = new(projectName, url, libraryVersion)
+		err = new(projectName, url, libraryVersion, typescript)
 	default:
 		err = cli.Error("Unknown command: %s\n", command)
 	}
@@ -58,13 +58,13 @@ func main() {
 	}
 }
 
-func new(projectName, url, libraryVersion string) error {
+func new(projectName, url, libraryVersion string, typescript bool) error {
 	projectType := strings.ToLower(pflag.Arg(1))
 
 	var err error
 	switch projectType {
 	case "client":
-		err = client.CreateNewClient(projectName, url, libraryVersion)
+		err = client.CreateNewClient(projectName, url, libraryVersion, typescript)
 	case "server":
 		err = server.CreateNewServer(projectName, libraryVersion)
 	default:

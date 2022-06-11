@@ -10,13 +10,13 @@ import (
 	"github.com/code-game-project/codegame-cli/util"
 )
 
-//go:embed templates/index-node.ts.tmpl
-var indexTSNode string
+//go:embed templates/index-node.js.tmpl
+var indexJSNode string
 
 //go:embed templates/tsconfig.json
 var tsConfig []byte
 
-func CreateNewClient(projectName, serverURL, libraryVersion string) error {
+func CreateNewClient(projectName, serverURL, libraryVersion string, typescript bool) error {
 	cli.Begin("Installing correct javascript-client version...")
 
 	var version string
@@ -38,18 +38,20 @@ func CreateNewClient(projectName, serverURL, libraryVersion string) error {
 	cli.Finish()
 
 	cli.Begin("Creating project template...")
-	err = createTemplate(projectName, serverURL)
+	err = createTemplate(projectName, serverURL, typescript)
 	if err != nil {
 		return err
 	}
 	cli.Finish()
 
-	cli.Begin("Installing dependencies...")
-	_, err = util.Execute(true, "npm", "install", "--save-dev", "@types/node")
-	if err != nil {
-		return err
+	if typescript {
+		cli.Begin("Installing dependencies...")
+		_, err = util.Execute(true, "npm", "install", "--save-dev", "@types/node")
+		if err != nil {
+			return err
+		}
+		cli.Finish()
 	}
-	cli.Finish()
 
 	cli.Begin("Writing configuration files...")
 	err = new.ConfigurePackageJSON()
@@ -61,15 +63,22 @@ func CreateNewClient(projectName, serverURL, libraryVersion string) error {
 	return nil
 }
 
-func createTemplate(projectName, serverURL string) error {
-	err := executeTemplate(indexTSNode, filepath.Join("src", "index.ts"), projectName, serverURL)
+func createTemplate(projectName, serverURL string, typescript bool) error {
+	path := filepath.Join("src", "index.js")
+	if typescript {
+		path = filepath.Join("src", "index.ts")
+	}
+
+	err := executeTemplate(indexJSNode, path, projectName, serverURL)
 	if err != nil {
 		return err
 	}
 
-	err = os.WriteFile("tsconfig.json", tsConfig, 0644)
-	if err != nil {
-		return err
+	if typescript {
+		err = os.WriteFile("tsconfig.json", tsConfig, 0644)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
