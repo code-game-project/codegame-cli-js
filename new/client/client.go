@@ -5,8 +5,8 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/Bananenpro/cli"
 	"github.com/code-game-project/codegame-cli-js/new"
-	"github.com/code-game-project/codegame-cli/cli"
 	"github.com/code-game-project/codegame-cli/util"
 )
 
@@ -17,7 +17,7 @@ var indexJSNode string
 var tsConfig []byte
 
 func CreateNewClient(projectName, serverURL, libraryVersion string, typescript bool) error {
-	cli.Begin("Installing correct javascript-client version...")
+	cli.BeginLoading("Installing javascript-client...")
 
 	var version string
 	var err error
@@ -35,30 +35,26 @@ func CreateNewClient(projectName, serverURL, libraryVersion string, typescript b
 		return err
 	}
 
-	cli.Finish()
+	cli.FinishLoading()
 
-	cli.Begin("Creating project template...")
 	err = createTemplate(projectName, serverURL, typescript)
 	if err != nil {
 		return err
 	}
-	cli.Finish()
 
 	if typescript {
-		cli.Begin("Installing dependencies...")
+		cli.BeginLoading("Installing dependencies...")
 		_, err = util.Execute(true, "npm", "install", "--save-dev", "@types/node")
 		if err != nil {
 			return err
 		}
-		cli.Finish()
+		cli.FinishLoading()
 	}
 
-	cli.Begin("Writing configuration files...")
 	err = new.ConfigurePackageJSON()
 	if err != nil {
 		return err
 	}
-	cli.Finish()
 
 	return nil
 }

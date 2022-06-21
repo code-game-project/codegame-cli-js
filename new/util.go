@@ -7,7 +7,7 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/code-game-project/codegame-cli/cli"
+	"github.com/Bananenpro/cli"
 	"github.com/code-game-project/codegame-cli/util"
 )
 

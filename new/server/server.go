@@ -4,8 +4,8 @@ import (
 	_ "embed"
 	"os"
 
+	"github.com/Bananenpro/cli"
 	"github.com/code-game-project/codegame-cli-js/new"
-	"github.com/code-game-project/codegame-cli/cli"
 	"github.com/code-game-project/codegame-cli/util"
 )
 
@@ -15,7 +15,7 @@ var tsConfig []byte
 func CreateNewServer(projectName, libraryVersion string) error {
 	cli.Warn("This feature is not fully implemented yet.")
 
-	cli.Begin("Installing correct javascript-server version...")
+	cli.BeginLoading("Installing javascript-server...")
 
 	var version string
 	var err error
@@ -33,28 +33,24 @@ func CreateNewServer(projectName, libraryVersion string) error {
 		return err
 	}
 
-	cli.Finish()
+	cli.FinishLoading()
 
-	cli.Begin("Creating project template...")
 	err = createTemplate(projectName)
 	if err != nil {
 		return err
 	}
-	cli.Finish()
 
-	cli.Begin("Installing dependencies...")
+	cli.BeginLoading("Installing dependencies...")
 	_, err = util.Execute(true, "npm", "install", "--save-dev", "@types/node")
 	if err != nil {
 		return err
 	}
-	cli.Finish()
+	cli.FinishLoading()
 
-	cli.Begin("Writing configuration files...")
 	err = new.ConfigurePackageJSON()
 	if err != nil {
 		return err
 	}
-	cli.Finish()
 
 	return nil
 }

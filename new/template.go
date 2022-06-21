@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 	"text/template"
 
-	"github.com/code-game-project/codegame-cli/cli"
+	"github.com/Bananenpro/cli"
 )
 
 func ExecTemplate(templateText, path string, data any) error {
