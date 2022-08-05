@@ -1,8 +1,6 @@
 package main
 
 import (
-	"os"
-
 	"github.com/Bananenpro/cli"
 	"github.com/code-game-project/go-utils/exec"
 	"github.com/code-game-project/go-utils/modules"
@@ -17,8 +15,7 @@ var serverDockerfileTemplate string
 var serverDockerignoreTemplate string
 
 func CreateNewServer(projectName string) error {
-	cli.Error("not implemented")
-	os.Exit(1)
+	panic("not implemented")
 
 	data, err := modules.ReadCommandConfig[modules.NewServerData]()
 	_ = data

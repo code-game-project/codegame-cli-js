@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/Bananenpro/cli"
+	"github.com/code-game-project/go-utils/cgfile"
 	"github.com/code-game-project/go-utils/cggenevents"
 	"github.com/code-game-project/go-utils/exec"
 	"github.com/code-game-project/go-utils/modules"
@@ -51,6 +52,17 @@ func CreateNewClient(projectName string) error {
 	if err != nil {
 		return err
 	}
+
+	cgConf, err := cgfile.LoadCodeGameFile("")
+	if err != nil {
+		return err
+	}
+	cgConf.LangConfig["runtime"] = runtime
+	err = cgConf.Write("")
+	if err != nil {
+		return err
+	}
+
 	node := runtime == "node"
 
 	if !node {
