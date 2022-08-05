@@ -1,0 +1,4 @@
+import { GameConfig } from './{{.GameName}}/event_definitions.js';
+import { Game, Verbosity } from './{{.GameName}}/game.js';
+
+const { game } = await Game.fromArgv<GameConfig>({}, Verbosity.DEBUG);
