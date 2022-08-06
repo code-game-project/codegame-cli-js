@@ -278,7 +278,7 @@ export class Game {
   {{ range .Commands }}
   /**
    * Sends a `{{.Name}}` command.
-   * @param data Optional options to go along with your event.
+   * @param data Optional options to go along with your command.
    */
   public send{{.PascalName}}(data: {{.PascalName}}Cmd['data']) {
     return this.socket.send<{{.PascalName}}Cmd>('{{.Name}}', data);

@@ -8,6 +8,7 @@ import (
 )
 
 func Build() error {
+	panic("not implemented")
 	config, err := cgfile.LoadCodeGameFile("")
 	if err != nil {
 		return err

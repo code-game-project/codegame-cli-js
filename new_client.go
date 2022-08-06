@@ -2,6 +2,7 @@ package main
 
 import (
 	_ "embed"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -117,7 +118,12 @@ func createClientTemplate(projectName string, info server.GameInfo, eventNames, 
 
 func execClientTemplate(projectName string, info server.GameInfo, eventNames, commandNames []string, node, typescript, update bool) error {
 	if update {
-		panic("not implemented")
+		cli.Warn("This action will ERASE and regenerate ALL files in '%s/'.\nYou will have to manually update your code to work with the new version.", info.Name)
+		ok, err := cli.YesNo("Continue?", false)
+		if err != nil || !ok {
+			return cli.ErrCanceled
+		}
+		os.RemoveAll(info.Name)
 	} else {
 		cli.Warn("DO NOT EDIT the `%s/` directory inside of the project. ALL CHANGES WILL BE LOST when running `codegame update`.", info.Name)
 	}

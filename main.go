@@ -36,7 +36,7 @@ func main() {
 			os.Exit(1)
 		}
 	case "update":
-		err = Update()
+		err = Update(projectName)
 	case "run":
 		err = Run()
 	case "build":
