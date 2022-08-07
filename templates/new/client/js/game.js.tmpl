@@ -9,21 +9,21 @@ import { createSocket, GameSocket, Verbosity } from '@code-game-project/client';
 import { Argument, Command, Option } from 'commander';
 
 import { argv, env } from 'process';
-export { Verbosity };
 
 function getURL() {
   if (!env.CG_GAME_URL) throw 'Environment variable `CG_GAME_URL` must be set.';
   else return env.CG_GAME_URL;
 }
 {{ else }}
-// import { createSocket, GameSocket, Verbosity } from '../node_modules/@code-game-project/client/dist/browser.js';
+import { createSocket, GameSocket, Verbosity } from '../node_modules/@code-game-project/client/dist/browser.js';
 
 function getURL() {
-  const CG_GAME_URL = new URLSearchParams(window.location.search).get('host');
-  if (!CG_GAME_URL) throw 'Query parameter "host" must be set.';
+  const CG_GAME_URL = new URLSearchParams(window.location.search).get('game_url');
+  if (!CG_GAME_URL) throw 'Query parameter "game_url" must be set.';
   else return CG_GAME_URL;
 }
 {{ end }}
+export { Verbosity };
 const VERBOSITY = ['silent', 'error', 'warning', 'info', 'debug'];
 {{ if .Node }}
 const PUBLIC_OPTION = new Option('--public', 'List the game as public.');

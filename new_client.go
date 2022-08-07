@@ -69,7 +69,7 @@ func CreateNewClient(projectName string) error {
 
 	node := runtime == "node"
 
-	if !node {
+	if !node && typescript {
 		panic("not implemented")
 	}
 
@@ -92,27 +92,32 @@ func CreateNewClient(projectName string) error {
 		return err
 	}
 
-	if node {
-		cli.BeginLoading("Installing javascript-client...")
-		_, err = exec.Execute(true, "npm", "install", "@code-game-project/client"+"@"+data.LibraryVersion)
-		if err != nil {
-			return err
-		}
-		cli.FinishLoading()
+	cli.BeginLoading("Installing javascript-client...")
+	_, err = exec.Execute(true, "npm", "install", "@code-game-project/client"+"@"+data.LibraryVersion)
+	if err != nil {
+		return err
+	}
+	cli.FinishLoading()
 
-		cli.BeginLoading("Installing dependencies...")
-		_, err = exec.Execute(true, "npm", "install", "commander")
+	cli.BeginLoading("Installing dependencies...")
+	_, err = exec.Execute(true, "npm", "install", "commander")
+	if err != nil {
+		return err
+	}
+	if typescript {
+		_, err = exec.Execute(true, "npm", "install", "--save-dev", "typescript", "@types/node")
 		if err != nil {
 			return err
 		}
-		if typescript {
-			_, err = exec.Execute(true, "npm", "install", "--save-dev", "typescript", "@types/node")
+	} else {
+		if !node {
+			_, err = exec.Execute(true, "npm", "install", "--save-dev", "serve")
 			if err != nil {
 				return err
 			}
 		}
-		cli.FinishLoading()
 	}
+	cli.FinishLoading()
 
 	return nil
 }
@@ -195,7 +200,15 @@ func execClientTemplate(projectName string, info server.GameInfo, eventNames, co
 		}
 	} else {
 		if !update {
-			err := ExecTemplate(clientJSIndexTemplate, "app.js", data)
+			indexName := "index.js"
+			if !node {
+				indexName = "app.js"
+				err := ExecTemplate(clientIndexHTMLTemplate, "index.html", data)
+				if err != nil {
+					return err
+				}
+			}
+			err := ExecTemplate(clientJSIndexTemplate, indexName, data)
 			if err != nil {
 				return err
 			}
@@ -203,12 +216,6 @@ func execClientTemplate(projectName string, info server.GameInfo, eventNames, co
 		err := ExecTemplate(clientJSGameTemplate, filepath.Join(info.Name, "game.js"), data)
 		if err != nil {
 			return err
-		}
-		if !node {
-			err := ExecTemplate(clientIndexHTMLTemplate, "index.html", data)
-			if err != nil {
-				return err
-			}
 		}
 	}
 
