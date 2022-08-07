@@ -1,10 +1,10 @@
-module github.com/code-game-project/codegame-cli-go
+module github.com/code-game-project/codegame-cli-js
 
 go 1.18
 
 require (
 	github.com/Bananenpro/cli v0.2.2
-	github.com/code-game-project/go-utils v0.2.8
+	github.com/code-game-project/go-utils v0.2.9
 )
 
 require (

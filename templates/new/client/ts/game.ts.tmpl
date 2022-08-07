@@ -7,14 +7,13 @@
 {{ if .Node }}
 import { createSocket, GameSocket, Verbosity } from '@code-game-project/client';
 import type { EventListenerCallback, Session } from '@code-game-project/client';
-import type { Events, Commands{{range .Commands}}, {{.PascalName}}Cmd{{end}}{{range .Events}}, {{.PascalName}}Event{{end}} } from './event_definitions';
+import type { Events, Commands{{range .Commands}}, {{.PascalName}}Cmd{{end}}{{range .Events}}, {{.PascalName}}Event{{end}}, GameConfig } from './event_definitions';
 
 import { Argument, Command, Option } from 'commander';
 
 import { argv, env } from 'process';
 export { Verbosity };
 
-/** The URL of the game server. */
 function getURL(): string {
   if (!env.CG_GAME_URL) throw 'Environment variable `CG_GAME_URL` must be set.';
   else return env.CG_GAME_URL;
@@ -24,7 +23,6 @@ import { createSocket, GameSocket, Verbosity } from '@code-game-project/client/d
 import type { EventListenerCallback, Session } from '@code-game-project/client/dist/browser';
 import type { Events, Commands{{range .Commands}}, {{.PascalName}}Cmd{{end}}{{range .Events}}, {{.PascalName}}Event{{end}} } from './event_definitions';
 
-/** The URL of the game server. */
 function getURL(): string {
   const CG_GAME_URL = new URLSearchParams(window.location.search).get('host');
   if (!CG_GAME_URL) throw 'Query parameter "host" must be set.';
@@ -66,7 +64,7 @@ export class Game {
    * @param verbosity The level of verbosity when logging.
    * @returns an instance of `Game`
    */
-  public static async fromArgv<GameConfig extends object = object>(config?: GameConfig, verbosity?: Verbosity): Promise<{ game: Game, gameId?: string, joinSecret?: string; }> {
+  public static async fromArgv(config?: GameConfig, verbosity?: Verbosity): Promise<{ game: Game, gameId?: string, joinSecret?: string; }> {
     return new Promise((resolve, _) => {
       new Command()
         .addCommand(new Command('create')
@@ -130,7 +128,7 @@ export class Game {
    * - protected=`boolean`
    * - verbosity=`Verbosity`
    */
-  public static async fromQuery<Config extends object = object>(config?: Config, verbosity?: Verbosity): Promise<{ game: Game, gameId?: string, joinSecret?: string; }> {
+  public static async fromQuery(config?: GameConfig, verbosity?: Verbosity): Promise<{ game: Game, gameId?: string, joinSecret?: string; }> {
     const params = new URLSearchParams(window.location.search);
     let operation = params.get('op');
     let gameId = params.get('game_id');

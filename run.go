@@ -27,7 +27,7 @@ func Run() error {
 	runtime := config.LangConfig["runtime"]
 	node := runtime == "node"
 
-	if !typescript || !node {
+	if !node {
 		panic("not implemented")
 	}
 
@@ -51,7 +51,12 @@ func runClient(url string, args []string, typescript, node bool) error {
 		}
 	}
 
-	cmdArgs := []string{"dist/index.js"}
+	path := "app.js"
+	if typescript {
+		path = "dist/index.js"
+	}
+
+	cmdArgs := []string{path}
 	cmdArgs = append(cmdArgs, args...)
 
 	env := []string{"CG_GAME_URL=" + url}

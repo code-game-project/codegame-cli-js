@@ -17,20 +17,23 @@ import (
 //go:embed templates/new/client/package.json.tmpl
 var clientPackageJSONTemplate string
 
-//go:embed templates/new/client/index.js.tmpl
+//go:embed templates/new/client/js/app.js.tmpl
 var clientJSIndexTemplate string
 
-//go:embed templates/new/client/game.js.tmpl
+//go:embed templates/new/client/js/game.js.tmpl
 var clientJSGameTemplate string
 
-//go:embed templates/new/client/tsconfig.json.tmpl
+//go:embed templates/new/client/ts/tsconfig.json.tmpl
 var clientTSConfigTemplate string
 
-//go:embed templates/new/client/index.ts.tmpl
+//go:embed templates/new/client/ts/index.ts.tmpl
 var clientTSIndexTemplate string
 
-//go:embed templates/new/client/game.ts.tmpl
+//go:embed templates/new/client/ts/game.ts.tmpl
 var clientTSGameTemplate string
+
+//go:embed templates/new/client/js/index.html.tmpl
+var clientIndexHTMLTemplate string
 
 func CreateNewClient(projectName string) error {
 	data, err := modules.ReadCommandConfig[modules.NewClientData]()
@@ -102,9 +105,11 @@ func CreateNewClient(projectName string) error {
 		if err != nil {
 			return err
 		}
-		_, err = exec.Execute(true, "npm", "install", "--save-dev", "typescript", "@types/node")
-		if err != nil {
-			return err
+		if typescript {
+			_, err = exec.Execute(true, "npm", "install", "--save-dev", "typescript", "@types/node")
+			if err != nil {
+				return err
+			}
 		}
 		cli.FinishLoading()
 	}
@@ -190,14 +195,20 @@ func execClientTemplate(projectName string, info server.GameInfo, eventNames, co
 		}
 	} else {
 		if !update {
-			err := ExecTemplate(clientJSIndexTemplate, "src/index.js", data)
+			err := ExecTemplate(clientJSIndexTemplate, "app.js", data)
 			if err != nil {
 				return err
 			}
 		}
-		err := ExecTemplate(clientJSGameTemplate, filepath.Join("src", info.Name, "game.js"), data)
+		err := ExecTemplate(clientJSGameTemplate, filepath.Join(info.Name, "game.js"), data)
 		if err != nil {
 			return err
+		}
+		if !node {
+			err := ExecTemplate(clientIndexHTMLTemplate, "index.html", data)
+			if err != nil {
+				return err
+			}
 		}
 	}
 
