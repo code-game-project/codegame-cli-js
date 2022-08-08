@@ -81,13 +81,13 @@ func runClient(url string, args []string, runtime string, typescript bool) error
 	} else {
 		var cmdArgs []string
 		if runtime == "bundler" {
-			cmdArgs = []string{"parcel", "--watch-for-stdin", "-p", "5000", "src/index.html"}
+			cmdArgs = []string{"parcel", "--watch-for-stdin", "-p", "8080", "src/index.html"}
 		} else {
-			cmdArgs = []string{"serve", "-n", "--no-port-switching", "-p", "5000", "."}
+			cmdArgs = []string{"serve", "-n", "--no-port-switching", "-p", "8080", "."}
 		}
 
 		done := make(chan struct{})
-		runWhenUP("localhost:5000", func() {
+		runWhenUP("localhost:8080", func() {
 			pflag.Usage = func() {
 				fmt.Fprintf(os.Stdout, "Usage: %s [options] [command]\n\n", os.Args[0])
 				fmt.Fprintf(os.Stdout, "Options:\n")
@@ -139,7 +139,7 @@ func runClient(url string, args []string, runtime string, typescript bool) error
 				queryParams += "&protected=true"
 			}
 
-			cgExec.OpenBrowser(fmt.Sprintf("http://localhost:5000?game_url=%s&op=%s%s", url, op, queryParams))
+			cgExec.OpenBrowser(fmt.Sprintf("http://localhost:8080?game_url=%s&op=%s%s", url, op, queryParams))
 		}, done)
 
 		_, err := cgExec.Execute(false, "npx", cmdArgs...)
