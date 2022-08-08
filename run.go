@@ -101,7 +101,7 @@ func runClient(url string, args []string, runtime string, typescript bool) error
 		var public bool
 		pflag.BoolVar(&public, "public", false, "Make the created game protected.")
 		var protected bool
-		pflag.BoolVar(&public, "protected", false, "Make the created game protected.")
+		pflag.BoolVar(&protected, "protected", false, "Make the created game protected.")
 		pflag.CommandLine.Parse(args)
 
 		var op string
