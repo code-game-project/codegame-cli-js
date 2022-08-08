@@ -32,7 +32,7 @@ var clientTSIndexTemplate string
 //go:embed templates/new/client/ts/game.ts.tmpl
 var clientTSGameTemplate string
 
-//go:embed templates/new/client/js/index.html.tmpl
+//go:embed templates/new/client/index.html.tmpl
 var clientIndexHTMLTemplate string
 
 func CreateNewClient(projectName string) error {
@@ -52,7 +52,13 @@ func CreateNewClient(projectName string) error {
 		return err
 	}
 
-	runtime, err := cli.SelectString("Runtime:", []string{"Browser", "Node.js"}, []string{"browser", "node"})
+	var runtime string
+
+	if typescript {
+		runtime, err = cli.SelectString("Runtime:", []string{"Node.js", "Browser (with Parcel)"}, []string{"node", "bundler"})
+	} else {
+		runtime, err = cli.SelectString("Runtime:", []string{"Node.js", "Browser", "Browser (with Parcel)"}, []string{"node", "browser", "bundler"})
+	}
 	if err != nil {
 		return err
 	}
@@ -65,12 +71,6 @@ func CreateNewClient(projectName string) error {
 	err = cgConf.Write("")
 	if err != nil {
 		return err
-	}
-
-	node := runtime == "node"
-
-	if !node && typescript {
-		panic("not implemented")
 	}
 
 	cge, err := api.GetCGEFile()
@@ -87,7 +87,7 @@ func CreateNewClient(projectName string) error {
 		return err
 	}
 
-	err = createClientTemplate(projectName, info, eventNames, commandNames, node, typescript)
+	err = createClientTemplate(projectName, info, eventNames, commandNames, runtime, typescript)
 	if err != nil {
 		return err
 	}
@@ -110,11 +110,17 @@ func CreateNewClient(projectName string) error {
 			return err
 		}
 	} else {
-		if !node {
+		if runtime == "browser" {
 			_, err = exec.Execute(true, "npm", "install", "--save-dev", "serve")
-			if err != nil {
-				return err
-			}
+		}
+		if err != nil {
+			return err
+		}
+	}
+	if runtime == "bundler" {
+		_, err = exec.Execute(true, "npm", "install", "--save-dev", "parcel")
+		if err != nil {
+			return err
 		}
 	}
 	cli.FinishLoading()
@@ -122,20 +128,24 @@ func CreateNewClient(projectName string) error {
 	return nil
 }
 
-func createClientTemplate(projectName string, info server.GameInfo, eventNames, commandNames []string, node, typescript bool) error {
-	return execClientTemplate(projectName, info, eventNames, commandNames, node, typescript, false)
+func createClientTemplate(projectName string, info server.GameInfo, eventNames, commandNames []string, runtime string, typescript bool) error {
+	return execClientTemplate(projectName, info, eventNames, commandNames, runtime, typescript, false)
 }
 
-func execClientTemplate(projectName string, info server.GameInfo, eventNames, commandNames []string, node, typescript, update bool) error {
+func execClientTemplate(projectName string, info server.GameInfo, eventNames, commandNames []string, runtime string, typescript, update bool) error {
+	wrapperDir := info.Name
+	if runtime != "browser" {
+		wrapperDir = filepath.Join("src", wrapperDir)
+	}
 	if update {
-		cli.Warn("This action will ERASE and regenerate ALL files in '%s/'.\nYou will have to manually update your code to work with the new version.", info.Name)
+		cli.Warn("This action will ERASE and regenerate ALL files in '%s/'.\nYou will have to manually update your code to work with the new version.", wrapperDir)
 		ok, err := cli.YesNo("Continue?", false)
 		if err != nil || !ok {
 			return cli.ErrCanceled
 		}
-		os.RemoveAll(info.Name)
+		os.RemoveAll(wrapperDir)
 	} else {
-		cli.Warn("DO NOT EDIT the `%s/` directory inside of the project. ALL CHANGES WILL BE LOST when running `codegame update`.", info.Name)
+		cli.Warn("DO NOT EDIT the `%s/` directory inside of the project. ALL CHANGES WILL BE LOST when running `codegame update`.", wrapperDir)
 	}
 
 	type event struct {
@@ -170,6 +180,7 @@ func execClientTemplate(projectName string, info server.GameInfo, eventNames, co
 		GameName    string
 		Version     string
 		Node        bool
+		Bundler     bool
 		TypeScript  bool
 		Events      []event
 		Commands    []event
@@ -177,7 +188,8 @@ func execClientTemplate(projectName string, info server.GameInfo, eventNames, co
 		ProjectName: projectName,
 		GameName:    info.Name,
 		Version:     info.Version,
-		Node:        node,
+		Node:        runtime == "node",
+		Bundler:     runtime == "bundler",
 		TypeScript:  typescript,
 		Events:      events,
 		Commands:    commands,
@@ -185,7 +197,15 @@ func execClientTemplate(projectName string, info server.GameInfo, eventNames, co
 
 	if typescript {
 		if !update {
-			err := ExecTemplate(clientTSIndexTemplate, "src/index.ts", data)
+			indexName := "src/index.ts"
+			if runtime == "bundler" {
+				indexName = "src/app.ts"
+				err := ExecTemplate(clientIndexHTMLTemplate, "src/index.html", data)
+				if err != nil {
+					return err
+				}
+			}
+			err := ExecTemplate(clientTSIndexTemplate, indexName, data)
 			if err != nil {
 				return err
 			}
@@ -194,16 +214,22 @@ func execClientTemplate(projectName string, info server.GameInfo, eventNames, co
 				return err
 			}
 		}
-		err := ExecTemplate(clientTSGameTemplate, filepath.Join("src", info.Name, "game.ts"), data)
+		err := ExecTemplate(clientTSGameTemplate, filepath.Join(wrapperDir, "game.ts"), data)
 		if err != nil {
 			return err
 		}
 	} else {
 		if !update {
-			indexName := "index.js"
-			if !node {
+			indexName := "src/index.js"
+			if runtime == "browser" {
 				indexName = "app.js"
 				err := ExecTemplate(clientIndexHTMLTemplate, "index.html", data)
+				if err != nil {
+					return err
+				}
+			} else if runtime == "bundler" {
+				indexName = "src/app.js"
+				err := ExecTemplate(clientIndexHTMLTemplate, "src/index.html", data)
 				if err != nil {
 					return err
 				}
@@ -213,13 +239,13 @@ func execClientTemplate(projectName string, info server.GameInfo, eventNames, co
 				return err
 			}
 		}
-		err := ExecTemplate(clientJSGameTemplate, filepath.Join(info.Name, "game.js"), data)
+		err := ExecTemplate(clientJSGameTemplate, filepath.Join(wrapperDir, "game.js"), data)
 		if err != nil {
 			return err
 		}
 	}
 
-	if !update && node {
+	if !update {
 		err := ExecTemplate(clientPackageJSONTemplate, "package.json", data)
 		if err != nil {
 			return err

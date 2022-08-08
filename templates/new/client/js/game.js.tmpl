@@ -15,8 +15,9 @@ function getURL() {
   else return env.CG_GAME_URL;
 }
 {{ else }}
-import { createSocket, GameSocket, Verbosity } from '../node_modules/@code-game-project/client/dist/browser.js';
-
+{{ if .Bundler }}import { createSocket, GameSocket, Verbosity } from '@code-game-project/client';
+{{ else }}import { createSocket, GameSocket, Verbosity } from '../node_modules/@code-game-project/client/dist/browser.js'
+{{end}}
 function getURL() {
   const CG_GAME_URL = new URLSearchParams(window.location.search).get('game_url');
   if (!CG_GAME_URL) throw 'Query parameter "game_url" must be set.';

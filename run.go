@@ -26,31 +26,33 @@ func Run() error {
 	if err != nil {
 		return err
 	}
-	runtime := config.LangConfig["runtime"]
-	node := runtime == "node"
+	runtime, _ := config.LangConfig["runtime"].(string)
+	if runtime != "node" && runtime != "bundler" && (typescript || runtime != "browser") {
+		return fmt.Errorf("Invalid runtime: '%s'", runtime)
+	}
 
 	url := external.TrimURL(config.URL)
 
 	switch config.Type {
 	case "client":
-		return runClient(url, data.Args, typescript, node)
+		return runClient(url, data.Args, runtime, typescript)
 	case "server":
-		return runServer(data.Args, typescript, node)
+		return runServer(data.Args, typescript)
 	default:
 		return fmt.Errorf("Unknown project type: %s", config.Type)
 	}
 }
 
-func runClient(url string, args []string, typescript, node bool) error {
-	if typescript {
+func runClient(url string, args []string, runtime string, typescript bool) error {
+	if typescript && runtime != "bundler" {
 		_, err := cgExec.Execute(true, "npx", "tsc")
 		if err != nil {
 			return err
 		}
 	}
 
-	if node {
-		path := "index.js"
+	if runtime == "node" {
+		path := "src/index.js"
 		if typescript {
 			path = "dist/index.js"
 		}
@@ -79,15 +81,20 @@ func runClient(url string, args []string, typescript, node bool) error {
 		if _, err := exec.LookPath("npx"); err != nil {
 			return fmt.Errorf("'npx' ist not installed!")
 		}
-
-		cmd := exec.Command("npx", "serve", "-n", "--no-port-switching", "-l", "5000", ".")
+		var cmdArgs []string
+		if runtime == "bundler" {
+			cmdArgs = []string{"parcel", "--watch-for-stdin", "-p", "5000", "src/index.html"}
+		} else {
+			cmdArgs = []string{"serve", "-n", "--no-port-switching", "-p", "5000", "."}
+		}
+		cmd := exec.Command("npx", cmdArgs...)
 		cmd.Stdin = os.Stdin
 		cmd.Stdout = os.Stdout
 		cmd.Stderr = os.Stderr
 
 		err := cmd.Start()
 		if err != nil {
-			return fmt.Errorf("Failed to start 'npx serve': %s", err)
+			return fmt.Errorf("Failed to start '%s': %s", strings.Join(cmdArgs, " "), err)
 		}
 
 		pflag.Usage = func() {
@@ -146,14 +153,14 @@ func runClient(url string, args []string, typescript, node bool) error {
 		cgExec.OpenBrowser(fmt.Sprintf("http://localhost:5000?game_url=%s&op=%s%s", url, op, queryParams))
 		err = cmd.Wait()
 		if err != nil {
-			return fmt.Errorf("Failed to run 'npx serve -n --no-port-switching -l 5000 .': %s", err)
+			return fmt.Errorf("Failed to run '%s': %s", strings.Join(cmdArgs, " "), err)
 		}
 	}
 
 	return nil
 }
 
-func runServer(args []string, typescript, node bool) error {
+func runServer(args []string, typescript bool) error {
 	panic("not implemented")
 	return nil
 }

@@ -55,7 +55,14 @@ func updateClient(projectName, libraryVersion string, config *cgfile.CodeGameFil
 		return err
 	}
 
-	err = updateClientTemplate(projectName, info, eventNames, commandNames, config.LangConfig["runtime"] == "node", config.Lang == "ts")
+	typescript := config.Lang == "ts"
+
+	runtime, _ := config.LangConfig["runtime"].(string)
+	if runtime != "node" && runtime != "bundler" && (typescript || runtime != "browser") {
+		return fmt.Errorf("Invalid runtime: '%s'", runtime)
+	}
+
+	err = updateClientTemplate(projectName, info, eventNames, commandNames, runtime, typescript)
 	if err != nil {
 		return err
 	}
@@ -65,6 +72,21 @@ func updateClient(projectName, libraryVersion string, config *cgfile.CodeGameFil
 	if err != nil {
 		return err
 	}
+	switch runtime {
+	case "browser":
+		_, err = exec.Execute(true, "npm", "install", "--save-dev", "serve@latest")
+	case "bundler":
+		_, err = exec.Execute(true, "npm", "install", "--save-dev", "parcel@latest")
+	}
+	if err != nil {
+		return err
+	}
+	if typescript {
+		_, err = exec.Execute(true, "npm", "install", "--save-dev", "typescript@latest", "@types/node@latest")
+		if err != nil {
+			return err
+		}
+	}
 	_, err = exec.Execute(true, "npm", "update")
 	if err != nil {
 		return err
@@ -73,8 +95,8 @@ func updateClient(projectName, libraryVersion string, config *cgfile.CodeGameFil
 	return nil
 }
 
-func updateClientTemplate(projectName string, info server.GameInfo, eventNames, commandNames []string, node, typescript bool) error {
-	return execClientTemplate(projectName, info, eventNames, commandNames, node, typescript, true)
+func updateClientTemplate(projectName string, info server.GameInfo, eventNames, commandNames []string, runtime string, typescript bool) error {
+	return execClientTemplate(projectName, info, eventNames, commandNames, runtime, typescript, true)
 }
 
 func updateServer(libraryVersion string) error {

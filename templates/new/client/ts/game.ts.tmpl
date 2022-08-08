@@ -18,9 +18,9 @@ function getURL(): string {
   else return env.CG_GAME_URL;
 }
 {{ else }}
-import { createSocket, GameSocket, Verbosity } from '@code-game-project/client/dist/browser';
-import type { EventListenerCallback, Session } from '@code-game-project/client/dist/browser';
-import type { Events, Commands{{range .Commands}}, {{.PascalName}}Cmd{{end}}{{range .Events}}, {{.PascalName}}Event{{end}} } from './event_definitions';
+import { createSocket, GameSocket, Verbosity } from '@code-game-project/client';
+import type { EventListenerCallback, Session } from '@code-game-project/client';
+import type { Events, Commands{{range .Commands}}, {{.PascalName}}Cmd{{end}}{{range .Events}}, {{.PascalName}}Event{{end}}, GameConfig } from './event_definitions';
 
 function getURL(): string {
   const CG_GAME_URL = new URLSearchParams(window.location.search).get('game_url');
@@ -45,7 +45,7 @@ function logGameCreds(gameId: string, joinSecret?: string) {
 
 /** Wrapper for {{ .GameName }}{{if .Version}} v{{ .Version }}{{end}}. */
 export class Game {
-  private socket: GameSocket<Events>;
+  private socket: GameSocket<Commands, Events>;
   private spectating: boolean;
 
   /**
