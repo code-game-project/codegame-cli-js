@@ -86,59 +86,59 @@ func runClient(url string, args []string, runtime string, typescript bool) error
 			cmdArgs = []string{"serve", "-n", "--no-port-switching", "-p", "8080", "."}
 		}
 
+		pflag.Usage = func() {
+			fmt.Fprintf(os.Stdout, "Usage: %s [options] [command]\n\n", os.Args[0])
+			fmt.Fprintf(os.Stdout, "Options:\n")
+			pflag.PrintDefaults()
+			fmt.Fprintf(os.Stdout, "\nCommands:\n")
+			fmt.Fprintf(os.Stdout, "  create [options] <username>                        Create and join a new game.\n")
+			fmt.Fprintf(os.Stdout, "  join [options] <game_id> <username> [join_secret]  Join an existing game.\n")
+			fmt.Fprintf(os.Stdout, "  reconnect [options] <username>                     Reconnect to a game using a saved session.\n")
+			fmt.Fprintf(os.Stdout, "  spectate [options] [game_id]                       Spectate a new or existing game.\n")
+		}
+
+		var queryParams string
+		var public bool
+		pflag.BoolVar(&public, "public", false, "Make the created game protected.")
+		var protected bool
+		pflag.BoolVar(&public, "protected", false, "Make the created game protected.")
+		pflag.CommandLine.Parse(args)
+
+		var op string
+		if pflag.NArg() > 0 {
+			op = pflag.Arg(0)
+		}
+
+		switch op {
+		case "create", "reconnect":
+			if pflag.NArg() > 1 {
+				queryParams += "&username=" + pflag.Arg(1)
+			}
+		case "join":
+			if pflag.NArg() > 1 {
+				queryParams += "&game_id=" + pflag.Arg(1)
+			}
+			if pflag.NArg() > 2 {
+				queryParams += "&username=" + pflag.Arg(2)
+			}
+			if pflag.NArg() > 3 {
+				queryParams += "&join_secret=" + pflag.Arg(3)
+			}
+		case "spectate":
+			if pflag.NArg() > 1 {
+				queryParams += "&game_id=" + pflag.Arg(1)
+			}
+		}
+
+		if public {
+			queryParams += "&public=true"
+		}
+		if protected {
+			queryParams += "&protected=true"
+		}
+
 		done := make(chan struct{})
 		runWhenUP("localhost:8080", func() {
-			pflag.Usage = func() {
-				fmt.Fprintf(os.Stdout, "Usage: %s [options] [command]\n\n", os.Args[0])
-				fmt.Fprintf(os.Stdout, "Options:\n")
-				pflag.PrintDefaults()
-				fmt.Fprintf(os.Stdout, "\nCommands:\n")
-				fmt.Fprintf(os.Stdout, "  create [options] <username>                        Create and join a new game.\n")
-				fmt.Fprintf(os.Stdout, "  join [options] <game_id> <username> [join_secret]  Join an existing game.\n")
-				fmt.Fprintf(os.Stdout, "  reconnect [options] <username>                     Reconnect to a game using a saved session.\n")
-				fmt.Fprintf(os.Stdout, "  spectate [options] [game_id]                       Spectate a new or existing game.\n")
-			}
-
-			var queryParams string
-			var public bool
-			pflag.BoolVar(&public, "public", false, "Make the created game protected.")
-			var protected bool
-			pflag.BoolVar(&public, "protected", false, "Make the created game protected.")
-			pflag.CommandLine.Parse(args)
-
-			var op string
-			if pflag.NArg() > 0 {
-				op = pflag.Arg(0)
-			}
-
-			switch op {
-			case "create", "reconnect":
-				if pflag.NArg() > 1 {
-					queryParams += "&username=" + pflag.Arg(1)
-				}
-			case "join":
-				if pflag.NArg() > 1 {
-					queryParams += "&game_id=" + pflag.Arg(1)
-				}
-				if pflag.NArg() > 2 {
-					queryParams += "&username=" + pflag.Arg(2)
-				}
-				if pflag.NArg() > 3 {
-					queryParams += "&join_secret=" + pflag.Arg(3)
-				}
-			case "spectate":
-				if pflag.NArg() > 1 {
-					queryParams += "&game_id=" + pflag.Arg(1)
-				}
-			}
-
-			if public {
-				queryParams += "&public=true"
-			}
-			if protected {
-				queryParams += "&protected=true"
-			}
-
 			cgExec.OpenBrowser(fmt.Sprintf("http://localhost:8080?game_url=%s&op=%s%s", url, op, queryParams))
 		}, done)
 
