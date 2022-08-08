@@ -95,7 +95,7 @@ func buildClient(gameName, output, url string, typescript bool, runtime string) 
 	} else if runtime == "browser" {
 		err = cp.Copy(".", output, cp.Options{
 			Skip: func(src string) (bool, error) {
-				return src == "build" || (src != "node_modules" && strings.HasPrefix(src, "node_modules") && !strings.Contains(src, "@code-game-project")) || src == ".codegame.json" || src == "package.json" || src == "package-lock.json", nil
+				return src == filepath.Clean(output) || (src != "node_modules" && strings.HasPrefix(src, "node_modules") && !strings.Contains(src, "@code-game-project")) || src == ".codegame.json" || src == "package.json" || src == "package-lock.json", nil
 			},
 		})
 		if err != nil {
