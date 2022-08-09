@@ -45,7 +45,7 @@ func Build() error {
 }
 
 func buildClient(gameName, output, url string, typescript bool, runtime string) error {
-	yes, err := cli.YesNo(fmt.Sprintf("The '%s' directory will be completely overridden. Continue?", output), false)
+	yes, err := cli.YesNo(fmt.Sprintf("The '%s' directory will be completely overwritten. Continue?", output), false)
 	if err != nil || !yes {
 		return cli.ErrCanceled
 	}
