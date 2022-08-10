@@ -143,9 +143,12 @@ export class Game {
 
     switch (operation) {
       case 'create':
-        const { game, gameId, joinSecret } = await this.createAndJoin(username, _public, _protected, config, verbosityOverride || verbosity);
-        logGameCreds(gameId, joinSecret);
-        return { game, gameId, joinSecret };
+        if (username) {
+          const { game, gameId, joinSecret } = await this.createAndJoin(username, _public, _protected, config, verbosityOverride || verbosity);
+          logGameCreds(gameId, joinSecret);
+          return { game, gameId, joinSecret };
+        }
+        throw `"op=create" requires the "username" query parameter.`;
       case 'join':
         if (gameId && username) return await this.join(gameId, username, joinSecret || undefined, verbosityOverride || verbosity);
         throw `"op=join" requires the "game_id" and "username" query parameters.`;
