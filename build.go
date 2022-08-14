@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -93,9 +94,13 @@ func buildClient(gameName, output, url string, typescript bool, runtime string) 
 			return err
 		}
 	} else if runtime == "browser" {
+		dependencies, err := npmDependencies()
+		if err != nil {
+			return err
+		}
 		err = cp.Copy(".", output, cp.Options{
 			Skip: func(src string) (bool, error) {
-				return src == filepath.Clean(output) || (src != "node_modules" && strings.HasPrefix(src, "node_modules") && !strings.Contains(src, "@code-game-project")) || src == ".codegame.json" || src == "package.json" || src == "package-lock.json", nil
+				return src == filepath.Clean(output) || (src != "node_modules" && strings.HasPrefix(src, "node_modules") && !containsAny(src, dependencies)) || src == ".codegame.json" || src == "package.json" || src == "package-lock.json", nil
 			},
 		})
 		if err != nil {
@@ -116,6 +121,36 @@ func buildClient(gameName, output, url string, typescript bool, runtime string) 
 	}
 	cli.FinishLoading()
 	return nil
+}
+
+func npmDependencies() ([]string, error) {
+	type pkgJSON struct {
+		Dependencies map[string]string `json:"dependencies"`
+	}
+	file, err := os.Open("package.json")
+	if err != nil {
+		return nil, fmt.Errorf("failed to open package.json: %w", err)
+	}
+	defer file.Close()
+	var data pkgJSON
+	err = json.NewDecoder(file).Decode(&data)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse package.json: %w", err)
+	}
+	dependencies := make([]string, 0, len(data.Dependencies))
+	for dep := range data.Dependencies {
+		dependencies = append(dependencies, strings.Split(dep, "/")[0])
+	}
+	return dependencies, nil
+}
+
+func containsAny(s string, substrs []string) bool {
+	for _, sub := range substrs {
+		if strings.Contains(s, sub) {
+			return true
+		}
+	}
+	return false
 }
 
 func replaceInFile(filename, old, new string) error {

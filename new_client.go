@@ -103,9 +103,11 @@ func CreateNewClient(projectName string) error {
 	cli.FinishLoading()
 
 	cli.BeginLoading("Installing dependencies...")
-	_, err = exec.Execute(true, "npm", "install", "commander")
-	if err != nil {
-		return err
+	if runtime == "node" {
+		_, err = exec.Execute(true, "npm", "install", "commander")
+		if err != nil {
+			return err
+		}
 	}
 	if typescript {
 		_, err = exec.Execute(true, "npm", "install", "--save-dev", "typescript", "@types/node")
