@@ -99,7 +99,7 @@ func buildClient(gameName, output, url string, typescript bool, runtime string) 
 			return err
 		}
 		err = cp.Copy(".", output, cp.Options{
-			Skip: func(src string) (bool, error) {
+			Skip: func(srcinfo os.FileInfo, src, dest string) (bool, error) {
 				return src == filepath.Clean(output) || (src != "node_modules" && strings.HasPrefix(src, "node_modules") && !containsAny(src, dependencies)) || src == ".codegame.json" || src == "package.json" || src == "package-lock.json", nil
 			},
 		})

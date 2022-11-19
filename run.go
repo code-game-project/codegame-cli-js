@@ -5,10 +5,12 @@ import (
 	"net"
 	"os"
 	"os/exec"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/code-game-project/go-utils/cgfile"
+	"github.com/code-game-project/go-utils/config"
 	cgExec "github.com/code-game-project/go-utils/exec"
 	"github.com/code-game-project/go-utils/external"
 	"github.com/code-game-project/go-utils/modules"
@@ -79,11 +81,12 @@ func runClient(url string, args []string, runtime string, typescript bool) error
 			return fmt.Errorf("Failed to run 'CG_GAME_URL=%s node %s'.", url, strings.Join(cmdArgs, " "))
 		}
 	} else {
+		conf := config.Load()
 		var cmdArgs []string
 		if runtime == "bundler" {
-			cmdArgs = []string{"parcel", "--watch-for-stdin", "-p", "8080", "src/index.html"}
+			cmdArgs = []string{"parcel", "--watch-for-stdin", "-p", strconv.Itoa(conf.DevPort), "src/index.html"}
 		} else {
-			cmdArgs = []string{"serve", "-n", "--no-port-switching", "-p", "8080", "."}
+			cmdArgs = []string{"serve", "-n", "--no-port-switching", "-p", strconv.Itoa(conf.DevPort), "."}
 		}
 
 		pflag.Usage = func() {
@@ -138,8 +141,8 @@ func runClient(url string, args []string, runtime string, typescript bool) error
 		}
 
 		done := make(chan struct{})
-		runWhenUP("localhost:8080", func() {
-			cgExec.OpenBrowser(fmt.Sprintf("http://localhost:8080?game_url=%s&op=%s%s", url, op, queryParams))
+		runWhenUP(fmt.Sprintf("localhost:%d", conf.DevPort), func() {
+			cgExec.OpenBrowser(fmt.Sprintf("http://localhost:%d?game_url=%s&op=%s%s", conf.DevPort, url, op, queryParams))
 		}, done)
 
 		_, err := cgExec.Execute(false, "npx", cmdArgs...)
