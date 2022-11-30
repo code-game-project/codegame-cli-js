@@ -2,6 +2,8 @@
 {{ else }}import { Game, Verbosity } from './{{.GameName}}/game.js';
 {{end}}{{ if .Node }}
 const { game } = await Game.fromArgv({}, Verbosity.DEBUG);
+
+// TODO: register event listeners
 {{ else if .Bundler }}
 let game;
 
@@ -11,3 +13,5 @@ let game;
 {{ else }}
 const { game } = await Game.fromQuery({}, Verbosity.DEBUG);
 {{ end }}
+
+// TODO: register event listeners

@@ -2,10 +2,14 @@
 {{ else }}import { Game, Verbosity } from './{{.GameName}}/game';
 {{end}}{{ if .Node }}
 const { game } = await Game.fromArgv({}, Verbosity.DEBUG);
+
+// TODO: register event listeners
 {{ else }}
 let game: Game;
 
 (async () => {
   ({ game } = await Game.fromQuery({}, Verbosity.DEBUG));
+
+  // TODO: register event listeners
 })();
 {{ end }}
