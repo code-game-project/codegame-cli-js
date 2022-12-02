@@ -5,10 +5,8 @@ const { game } = await Game.fromArgv({}, Verbosity.WARNING);
 
 // TODO: register event listeners
 {{ else if .Bundler }}
-let game;
-
 (async () => {
-  ({ game } = await Game.fromQuery({}, Verbosity.WARNING));
+  const { game } = await Game.fromQuery({}, Verbosity.WARNING);
 })();
 {{ else }}
 const { game } = await Game.fromQuery({}, Verbosity.WARNING);
