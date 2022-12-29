@@ -82,11 +82,19 @@ func runClient(url string, args []string, runtime string, typescript bool) error
 		}
 	} else {
 		conf := config.Load()
+		port := conf.DevPort
+		if portStr, ok := os.LookupEnv("CG_PORT"); ok {
+			p, err := strconv.Atoi(portStr)
+			if err == nil {
+				port = p
+			}
+		}
+
 		var cmdArgs []string
 		if runtime == "bundler" {
-			cmdArgs = []string{"parcel", "--watch-for-stdin", "-p", strconv.Itoa(conf.DevPort), "src/index.html"}
+			cmdArgs = []string{"parcel", "--watch-for-stdin", "-p", strconv.Itoa(port), "src/index.html"}
 		} else {
-			cmdArgs = []string{"serve", "-n", "--no-port-switching", "-p", strconv.Itoa(conf.DevPort), "."}
+			cmdArgs = []string{"serve", "-n", "--no-port-switching", "-p", strconv.Itoa(port), "."}
 		}
 
 		pflag.Usage = func() {
@@ -141,8 +149,8 @@ func runClient(url string, args []string, runtime string, typescript bool) error
 		}
 
 		done := make(chan struct{})
-		runWhenUP(fmt.Sprintf("localhost:%d", conf.DevPort), func() {
-			cgExec.OpenBrowser(fmt.Sprintf("http://localhost:%d?game_url=%s&op=%s%s", conf.DevPort, url, op, queryParams))
+		runWhenUP(fmt.Sprintf("localhost:%d", port), func() {
+			cgExec.OpenBrowser(fmt.Sprintf("http://localhost:%d?game_url=%s&op=%s%s", port, url, op, queryParams))
 		}, done)
 
 		_, err := cgExec.Execute(false, "npx", cmdArgs...)
